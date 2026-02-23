@@ -12,6 +12,11 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- PWA Metadata -->
+    <meta name="theme-color" content="#2563eb">
+    <link rel="manifest" href="manifest.json">
+    <link rel="apple-touch-icon" href="https://cdn-icons-png.flaticon.com/512/1011/1011322.png">
 </head>
 
 <body>
@@ -27,6 +32,17 @@
         <span id="toastMessage">Link copied to clipboard!</span>
     </div>
 
+    <!-- Bulk Action Bar -->
+    <div id="bulkBar" class="bulk-action-bar">
+        <div class="bulk-info">
+            <span id="selectedCount">0</span> items selected
+        </div>
+        <div class="bulk-btns">
+            <button id="bulkDeleteBtn" class="btn-bulk-delete"><i class="fas fa-trash-alt"></i> Delete</button>
+            <button id="cancelBulkBtn" class="btn-bulk-cancel">Cancel</button>
+        </div>
+    </div>
+
     <nav class="navbar">
         <div class="container">
             <div class="logo">
@@ -37,9 +53,17 @@
                 <i class="fas fa-search search-icon"></i>
                 <input type="text" id="searchInput" placeholder="Search your links...">
             </div>
-            <button id="openModalBtn" class="btn btn-primary">
-                <i class="fas fa-plus"></i> <span>Add New</span>
-            </button>
+            <div class="nav-actions">
+                <button id="viewToggle" class="icon-btn" title="Toggle Layout">
+                    <i class="fas fa-th-large"></i>
+                </button>
+                <button id="logoutBtn" class="icon-btn" title="Lock Session" style="display: none;">
+                    <i class="fas fa-lock"></i>
+                </button>
+                <button id="openModalBtn" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> <span class="hide-mobile">Add New</span>
+                </button>
+            </div>
         </div>
     </nav>
 
@@ -57,7 +81,7 @@
             <button class="nav-arrow right" id="nextCat"><i class="fas fa-chevron-right"></i></button>
         </div>
 
-        <div id="linksGrid" class="links-grid">
+        <div id="linksGrid" class="links-grid grid-mode">
             <!-- Links will be injected here -->
             <div class="empty-state" id="emptyState">
                 <div class="empty-icon">
@@ -92,6 +116,21 @@
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-submit">Save Link</button>
             </form>
+        </div>
+    </div>
+
+    <!-- QR Code Modal -->
+    <div id="qrModal" class="modal">
+        <div class="modal-content qr-modal-content">
+            <div class="modal-header">
+                <h2>Share QR Code</h2>
+                <button class="close-btn" id="closeQrModalBtn">&times;</button>
+            </div>
+            <div class="qr-container">
+                <img id="qrImage" src="" alt="QR Code">
+                <p id="qrTitle"></p>
+                <small id="qrLink"></small>
+            </div>
         </div>
     </div>
 
