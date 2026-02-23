@@ -739,9 +739,51 @@ body {
     border: 1px solid var(--glass-border);
     border-radius: 12px;
     outline: none;
+    transition: border-color 0.2s;
 }
 
-/* Responsiveness */
+.form-group input.input-error {
+    border-color: var(--danger);
+    background: #fff5f5;
+}
+
+/* Duplicate URL Warning */
+.duplicate-warning {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+    padding: 0.5rem 0.75rem;
+    background: #fff5f5;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    color: var(--danger);
+    font-size: 0.82rem;
+    font-weight: 600;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Search Highlight */
+mark.search-highlight {
+    background: #fef08a;
+    color: inherit;
+    border-radius: 3px;
+    padding: 0 2px;
+}
+
+
 @media (max-width: 768px) {
 
     .navbar {

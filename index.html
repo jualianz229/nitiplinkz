@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkVault | Premium Link Management</title>
+    <title>LinkVault | Link Management</title>
     <meta name="description"
         content="Manage your favorite web links with elegance and speed. Discover the premium way to organize your digital workspace.">
     <link rel="stylesheet" href="style.css">
@@ -106,16 +106,22 @@
             <form id="linkForm">
                 <input type="hidden" id="linkId">
                 <div class="form-group">
-                    <label for="linkTitle">Title</label>
-                    <input type="text" id="linkTitle" placeholder="e.g. My Portfolio" required>
+                    <label for="linkTitle">Product Name</label>
+                    <input type="text" id="linkTitle" placeholder="e.g. BImoli 2L" required>
                 </div>
                 <div class="form-group">
-                    <label for="linkUrl">URL</label>
-                    <input type="url" id="linkUrl" placeholder="https://example.com" required>
+                    <label for="linkUrl">Product URL</label>
+                    <input type="url" id="linkUrl" placeholder="https://shopee.co.id" required autocomplete="off">
+                    <div id="duplicateWarning" class="duplicate-warning" style="display:none;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>This URL is already saved!</span>
+                    </div>
                 </div>
                 <div class="form-group">
                     <label for="linkCategory">Category (Optional)</label>
-                    <input type="text" id="linkCategory" placeholder="e.g. Work, Social, Dev">
+                    <input type="text" id="linkCategory" placeholder="e.g. Minyak, Gula, Beras" autocomplete="off"
+                        list="categoryList">
+                    <datalist id="categoryList"></datalist>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-submit">Save Link</button>
             </form>

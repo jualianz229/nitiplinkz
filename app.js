@@ -51,6 +51,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const qrLinkText = document.getElementById('qrLink');
     const closeQrModalBtn = document.getElementById('closeQrModalBtn');
     const clearSearch = document.getElementById('clearSearch');
+    const duplicateWarning = document.getElementById('duplicateWarning');
+    const linkUrlInput = document.getElementById('linkUrl');
+    const categoryList = document.getElementById('categoryList');
 
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
@@ -83,7 +86,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const matchesCategory = activeCategory === 'Semua' || link.category === activeCategory;
             return matchesSearch && matchesCategory;
         });
-        renderLinks(filtered, false);
+        renderLinks(filtered, false, term);
     });
 
     clearSearch.addEventListener('click', () => {
@@ -92,6 +95,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         searchInput.focus();
         renderLinks();
     });
+
+    // --- Smart Features ---
+
+    // 1. Duplicate URL Detection (real-time)
+    linkUrlInput.addEventListener('input', () => {
+        const val = linkUrlInput.value.trim().toLowerCase();
+        const currentId = document.getElementById('linkId').value;
+        const isDuplicate = links.some(l =>
+            l.url.toLowerCase() === val && l.id != currentId
+        );
+        duplicateWarning.style.display = isDuplicate ? 'flex' : 'none';
+        linkUrlInput.classList.toggle('input-error', isDuplicate);
+    });
+
+    // 2. Update category autocomplete datalist
+    function updateCategoryDatalist() {
+        if (!categoryList) return;
+        const categories = [...new Set(links.map(l => l.category).filter(Boolean))];
+        categoryList.innerHTML = categories
+            .map(cat => `<option value="${cat}">`)
+            .join('');
+    }
 
     viewToggle.addEventListener('click', () => {
         viewMode = viewMode === 'grid-mode' ? 'list-mode' : 'grid-mode';
@@ -232,7 +257,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(updateArrowVisibility, 100);
     }
 
-    function renderLinks(data = null, updateCategories = true) {
+    function renderLinks(data = null, updateCategories = true, searchTerm = '') {
         const renderData = data || (activeCategory === 'Semua' ? links : links.filter(l => l.category === activeCategory));
 
         linksGrid.className = `links-grid ${viewMode}`;
@@ -243,26 +268,39 @@ document.addEventListener('DOMContentLoaded', async () => {
             emptyState.style.display = 'block';
         } else {
             emptyState.style.display = 'none';
-            renderData.forEach(link => linksGrid.appendChild(createLinkCard(link)));
+            renderData.forEach(link => linksGrid.appendChild(createLinkCard(link, searchTerm)));
         }
 
-        if (updateCategories) renderCategories();
+        if (updateCategories) {
+            renderCategories();
+            updateCategoryDatalist();
+        }
         statsText.textContent = `Storing ${renderData.length} valuable connections`;
     }
 
-    function createLinkCard(link) {
+    // 3. Search highlight helper
+    function highlightText(text, term) {
+        if (!term) return text;
+        const escaped = term.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escaped})`, 'gi');
+        return text.replace(regex, '<mark class="search-highlight">$1</mark>');
+    }
+
+    function createLinkCard(link, searchTerm = '') {
         const div = document.createElement('div');
         div.className = `link-card ${selectedIds.has(link.id) ? 'selected' : ''}`;
 
-        const firstLetter = link.title.charAt(0).toUpperCase();
         let domain = 'link';
         try { domain = new URL(link.url).hostname; } catch (e) { domain = link.url; }
+
+        const displayTitle = highlightText(link.title, searchTerm);
+        const displayDomain = highlightText(domain, searchTerm);
 
         div.innerHTML = `
             <div class="card-select"></div>
             <div class="link-info">
-                <h3>${link.title}</h3>
-                <p>${domain}</p>
+                <h3>${displayTitle}</h3>
+                <p>${displayDomain}</p>
             </div>
             <div class="card-actions">
                 <span class="category-badge">${link.category}</span>
