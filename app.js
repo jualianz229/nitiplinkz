@@ -50,6 +50,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const qrTitleText = document.getElementById('qrTitle');
     const qrLinkText = document.getElementById('qrLink');
     const closeQrModalBtn = document.getElementById('closeQrModalBtn');
+    const clearSearch = document.getElementById('clearSearch');
 
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
@@ -74,6 +75,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
+        clearSearch.style.display = term ? 'flex' : 'none';
         const filtered = links.filter(link => {
             const matchesSearch = link.title.toLowerCase().includes(term) ||
                 link.url.toLowerCase().includes(term) ||
@@ -82,6 +84,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             return matchesSearch && matchesCategory;
         });
         renderLinks(filtered, false);
+    });
+
+    clearSearch.addEventListener('click', () => {
+        searchInput.value = '';
+        clearSearch.style.display = 'none';
+        searchInput.focus();
+        renderLinks();
     });
 
     viewToggle.addEventListener('click', () => {

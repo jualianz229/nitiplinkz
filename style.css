@@ -146,6 +146,31 @@ body {
     background: white;
 }
 
+.clear-search-btn {
+    position: absolute;
+    right: 0.85rem;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    transition: all 0.2s;
+}
+
+.clear-search-btn:hover {
+    background: var(--input-bg);
+    color: var(--danger);
+}
+
 .nav-actions {
     display: flex;
     align-items: center;
@@ -823,5 +848,49 @@ body {
 
     .qr-modal-content {
         max-width: 95%;
+    }
+}
+
+/* Very small screens (360px and below) */
+@media (max-width: 400px) {
+
+    /* Add New: icon only, no text */
+    #openModalBtn span {
+        display: none;
+    }
+
+    #openModalBtn {
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 10px;
+        justify-content: center;
+    }
+
+    /* Tighter list mode buttons */
+    .links-grid.list-mode .link-card {
+        padding: 0.65rem 0.75rem;
+        gap: 0.5rem;
+    }
+
+    .links-grid.list-mode .category-badge {
+        max-width: 65px;
+        font-size: 0.6rem;
+    }
+
+    .links-grid.list-mode .delete-btn,
+    .links-grid.list-mode .edit-btn,
+    .links-grid.list-mode .copy-btn,
+    .links-grid.list-mode .qr-btn {
+        padding: 0.25rem;
+        font-size: 0.8rem;
+    }
+
+    .links-grid.list-mode .action-buttons {
+        gap: 0;
+    }
+
+    main.container {
+        padding: 0 0.75rem;
     }
 }
