@@ -1,9 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Initialize Supabase client
+// Environment variables from Vite
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
-const supabase = createClient(supabaseUrl, supabaseKey)
+
+// Initialize Supabase only if keys exist to prevent script crashing
+let supabase = null;
+try {
+    if (supabaseUrl && supabaseKey && !supabaseUrl.includes('your_supabase')) {
+        supabase = createClient(supabaseUrl, supabaseKey)
+    }
+} catch (e) {
+    console.error('Failed to initialize Supabase client:', e);
+}
 
 document.addEventListener('DOMContentLoaded', async () => {
     // State Management
@@ -39,6 +48,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     linkForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
+        if (!supabase) {
+            alert('Aplikasi belum terhubung ke database. Harap cek konfigurasi Environment Variables di Vercel.');
+            return;
+        }
+
         const newLink = {
             title: document.getElementById('linkTitle').value,
             url: formatUrl(document.getElementById('linkUrl').value),
@@ -63,10 +77,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         linkModal.classList.remove('active');
     });
 
-    // --- Configuration Check ---
-    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your_supabase')) {
-        console.error('Supabase configuration missing.');
-        statsText.textContent = 'Error: Isi file .env Anda dulu!';
+    // --- Configuration Check for Data Loading ---
+    if (!supabase) {
+        console.error('Supabase configuration missing or client failed to initialize.');
+        statsText.textContent = 'Error: Konfigurasi Supabase tidak ditemukan di Vercel.';
         statsText.style.color = '#ef4444';
         return;
     }
@@ -75,7 +89,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     try {
         await fetchLinks();
     } catch (err) {
-        console.error('Fetch failed:', err);
+        console.error('Initial fetch failed:', err);
     }
 
     // Functions
