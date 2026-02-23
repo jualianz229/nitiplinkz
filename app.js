@@ -19,17 +19,23 @@ document.addEventListener('DOMContentLoaded', async () => {
     const closeModalBtn = document.getElementById('closeModalBtn');
     const linkForm = document.getElementById('linkForm');
 
-    // Initialize
-    await fetchLinks();
-
-    // Modal Control
+    // --- UI Listeners (Set up immediately so buttons work) ---
     openModalBtn.addEventListener('click', () => linkModal.classList.add('active'));
     closeModalBtn.addEventListener('click', () => linkModal.classList.remove('active'));
     window.addEventListener('click', (e) => {
         if (e.target === linkModal) linkModal.classList.remove('active');
     });
 
-    // Add Link to Supabase
+    searchInput.addEventListener('input', (e) => {
+        const term = e.target.value.toLowerCase();
+        const filtered = links.filter(link =>
+            link.title.toLowerCase().includes(term) ||
+            link.url.toLowerCase().includes(term) ||
+            link.category.toLowerCase().includes(term)
+        );
+        renderLinks(filtered);
+    });
+
     linkForm.addEventListener('submit', async (e) => {
         e.preventDefault();
 
@@ -46,28 +52,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         if (error) {
             console.error('Error inserting link:', error);
-            alert('Failed to save link to database');
+            alert('Gagal menyimpan ke database. Cek koneksi atau .env Anda.');
             return;
         }
 
         links.unshift(data[0]);
         renderLinks();
 
-        // Reset and Close
         linkForm.reset();
         linkModal.classList.remove('active');
     });
 
-    // Search Logic
-    searchInput.addEventListener('input', (e) => {
-        const term = e.target.value.toLowerCase();
-        const filtered = links.filter(link =>
-            link.title.toLowerCase().includes(term) ||
-            link.url.toLowerCase().includes(term) ||
-            link.category.toLowerCase().includes(term)
-        );
-        renderLinks(filtered);
-    });
+    // --- Configuration Check ---
+    if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your_supabase')) {
+        console.error('Supabase configuration missing.');
+        statsText.textContent = 'Error: Isi file .env Anda dulu!';
+        statsText.style.color = '#ef4444';
+        return;
+    }
+
+    // --- Data Initialization ---
+    try {
+        await fetchLinks();
+    } catch (err) {
+        console.error('Fetch failed:', err);
+    }
 
     // Functions
     async function fetchLinks() {
@@ -94,6 +103,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function updateStats() {
         statsText.textContent = `Storing ${links.length} valuable connection${links.length === 1 ? '' : 's'}`;
+        statsText.style.color = 'var(--text-muted)';
     }
 
     async function deleteLink(id, e) {
@@ -117,7 +127,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function renderLinks(data = links) {
         linksGrid.innerHTML = '';
-
         if (data.length === 0) {
             linksGrid.appendChild(emptyState);
             emptyState.style.display = 'block';
@@ -134,14 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     function createLinkCard(link) {
         const div = document.createElement('div');
         div.className = 'link-card';
-
         let domain = 'link';
-        try {
-            domain = new URL(link.url).hostname;
-        } catch (e) {
-            domain = link.url;
-        }
-
+        try { domain = new URL(link.url).hostname; } catch (e) { domain = link.url; }
         const faviconUrl = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
 
         div.innerHTML = `
@@ -159,16 +162,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </button>
             </div>
         `;
-
-        // Redirect on click
-        div.addEventListener('click', () => {
-            window.open(link.url, '_blank', 'noopener,noreferrer');
-        });
-
-        // Delete handler
+        div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener,noreferrer'));
         const delBtn = div.querySelector('.delete-btn');
         delBtn.addEventListener('click', (e) => deleteLink(link.id, e));
-
         return div;
     }
 });
