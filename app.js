@@ -3,6 +3,7 @@ import { createClient } from '@supabase/supabase-js'
 // Environment variables from Vite
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
+const APP_PASSWORD = import.meta.env.VITE_APP_PASSWORD || 'admin123'
 
 // Initialize Supabase only if keys exist to prevent script crashing
 let supabase = null;
@@ -17,6 +18,7 @@ try {
 document.addEventListener('DOMContentLoaded', async () => {
     // State Management
     let links = [];
+    let activeCategory = 'Semua';
 
     // DOM Elements
     const linksGrid = document.getElementById('linksGrid');
@@ -27,8 +29,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     const openModalBtn = document.getElementById('openModalBtn');
     const closeModalBtn = document.getElementById('closeModalBtn');
     const linkForm = document.getElementById('linkForm');
+    const categoriesContainer = document.getElementById('categoriesContainer');
+    const prevCatBtn = document.getElementById('prevCat');
+    const nextCatBtn = document.getElementById('nextCat');
 
-    // --- UI Listeners (Set up immediately so buttons work) ---
+    // --- UI Listeners ---
     openModalBtn.addEventListener('click', () => linkModal.classList.add('active'));
     closeModalBtn.addEventListener('click', () => linkModal.classList.remove('active'));
     window.addEventListener('click', (e) => {
@@ -37,19 +42,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     searchInput.addEventListener('input', (e) => {
         const term = e.target.value.toLowerCase();
-        const filtered = links.filter(link =>
-            link.title.toLowerCase().includes(term) ||
-            link.url.toLowerCase().includes(term) ||
-            link.category.toLowerCase().includes(term)
-        );
-        renderLinks(filtered);
+        const filtered = links.filter(link => {
+            const matchesSearch = link.title.toLowerCase().includes(term) ||
+                link.url.toLowerCase().includes(term) ||
+                link.category.toLowerCase().includes(term);
+            const matchesCategory = activeCategory === 'Semua' || link.category === activeCategory;
+            return matchesSearch && matchesCategory;
+        });
+        renderLinks(filtered, false);
     });
+
+    // Slider Scroll Arrows Logic
+    if (categoriesContainer) {
+        categoriesContainer.addEventListener('scroll', updateArrowVisibility);
+        prevCatBtn.addEventListener('click', () => {
+            categoriesContainer.scrollBy({ left: -200, behavior: 'smooth' });
+        });
+        nextCatBtn.addEventListener('click', () => {
+            categoriesContainer.scrollBy({ left: 200, behavior: 'smooth' });
+        });
+    }
+
+    function updateArrowVisibility() {
+        if (!categoriesContainer) return;
+        const { scrollLeft, scrollWidth, clientWidth } = categoriesContainer;
+
+        if (scrollLeft > 5) {
+            prevCatBtn.classList.add('visible');
+        } else {
+            prevCatBtn.classList.remove('visible');
+        }
+
+        if (scrollLeft + clientWidth < scrollWidth - 5) {
+            nextCatBtn.classList.add('visible');
+        } else {
+            nextCatBtn.classList.remove('visible');
+        }
+    }
 
     linkForm.addEventListener('submit', async (e) => {
         e.preventDefault();
-
         if (!supabase) {
-            alert('Aplikasi belum terhubung ke database. Harap cek konfigurasi Environment Variables di Vercel.');
+            alert('Aplikasi belum terhubung ke database.');
+            return;
+        }
+
+        // Removed confirm() but kept password for security
+        if (prompt('Masukkan password untuk menyimpan:') !== APP_PASSWORD) {
+            alert('Password salah atau akses dibatalkan.');
             return;
         }
 
@@ -59,99 +99,78 @@ document.addEventListener('DOMContentLoaded', async () => {
             category: document.getElementById('linkCategory').value || 'Uncategorized'
         };
 
-        const { data, error } = await supabase
-            .from('links')
-            .insert([newLink])
-            .select();
-
-        if (error) {
-            console.error('Error inserting link:', error);
-            alert('Gagal menyimpan ke database. Cek koneksi atau .env Anda.');
-            return;
+        const { data, error } = await supabase.from('links').insert([newLink]).select();
+        if (!error) {
+            links.unshift(data[0]);
+            renderLinks();
+            linkForm.reset();
+            linkModal.classList.remove('active');
         }
-
-        links.unshift(data[0]);
-        renderLinks();
-
-        linkForm.reset();
-        linkModal.classList.remove('active');
     });
 
-    // --- Configuration Check for Data Loading ---
-    if (!supabase) {
-        console.error('Supabase configuration missing or client failed to initialize.');
-        statsText.textContent = 'Error: Konfigurasi Supabase tidak ditemukan di Vercel.';
-        statsText.style.color = '#ef4444';
-        return;
-    }
-
-    // --- Data Initialization ---
-    try {
-        await fetchLinks();
-    } catch (err) {
-        console.error('Initial fetch failed:', err);
-    }
-
-    // Functions
-    async function fetchLinks() {
-        const { data, error } = await supabase
-            .from('links')
-            .select('*')
-            .order('created_at', { ascending: false });
-
-        if (error) {
-            console.error('Error fetching links:', error);
-            return;
-        }
-
-        links = data;
-        renderLinks();
-    }
-
-    function formatUrl(url) {
-        if (!url.startsWith('http://') && !url.startsWith('https://')) {
-            return `https://${url}`;
-        }
-        return url;
-    }
-
-    function updateStats() {
-        statsText.textContent = `Storing ${links.length} valuable connection${links.length === 1 ? '' : 's'}`;
-        statsText.style.color = 'var(--text-muted)';
-    }
-
-    async function deleteLink(id, e) {
-        e.stopPropagation();
-        if (confirm('Are you sure you want to remove this link?')) {
-            const { error } = await supabase
-                .from('links')
-                .delete()
-                .eq('id', id);
-
-            if (error) {
-                console.error('Error deleting link:', error);
-                alert('Failed to delete link');
-                return;
-            }
-
-            links = links.filter(link => link.id !== id);
+    if (supabase) {
+        try {
+            const { data } = await supabase.from('links').select('*').order('created_at', { ascending: false });
+            links = data || [];
             renderLinks();
-        }
+        } catch (err) { console.error(err); }
     }
 
-    function renderLinks(data = links) {
+    function renderCategories() {
+        if (!categoriesContainer) return;
+        const categories = ['Semua', ...new Set(links.map(link => link.category))];
+        categoriesContainer.innerHTML = '';
+        const colors = ['cat-blue', 'cat-green', 'cat-orange', 'cat-purple', 'cat-rose', 'cat-cyan'];
+
+        categories.forEach((cat, i) => {
+            const pill = document.createElement('div');
+            pill.className = `category-pill ${cat === activeCategory ? 'active' : ''}`;
+            if (cat !== 'Semua') pill.classList.add(colors[i % colors.length]);
+            pill.textContent = cat;
+            pill.addEventListener('click', () => {
+                activeCategory = cat;
+                renderLinks();
+            });
+            categoriesContainer.appendChild(pill);
+        });
+
+        setTimeout(updateArrowVisibility, 100);
+    }
+
+    function renderLinks(data = null, updateCategories = true) {
+        const renderData = data || (activeCategory === 'Semua' ? links : links.filter(l => l.category === activeCategory));
         linksGrid.innerHTML = '';
-        if (data.length === 0) {
+        if (renderData.length === 0) {
             linksGrid.appendChild(emptyState);
             emptyState.style.display = 'block';
         } else {
             emptyState.style.display = 'none';
-            data.forEach(link => {
-                const card = createLinkCard(link);
-                linksGrid.appendChild(card);
-            });
+            renderData.forEach(link => linksGrid.appendChild(createLinkCard(link)));
         }
-        updateStats();
+        if (updateCategories) renderCategories();
+        updateStats(renderData.length);
+    }
+
+    function formatUrl(url) {
+        return (url.startsWith('http://') || url.startsWith('https://')) ? url : `https://${url}`;
+    }
+
+    function updateStats(count) {
+        statsText.textContent = `Storing ${count} valuable connections`;
+    }
+
+    async function deleteLink(id, e) {
+        e.stopPropagation();
+        // Removed confirm() but kept password check
+        if (prompt('Masukkan password untuk menghapus:') === APP_PASSWORD) {
+            const { error } = await supabase.from('links').delete().eq('id', id);
+            if (!error) {
+                links = links.filter(link => link.id !== id);
+                renderLinks();
+            }
+        } else {
+            alert('Password salah atau akses dibatalkan.');
+        }
     }
 
     function createLinkCard(link) {
@@ -160,25 +179,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         let domain = 'link';
         try { domain = new URL(link.url).hostname; } catch (e) { domain = link.url; }
         const faviconUrl = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
-
         div.innerHTML = `
-            <div class="link-icon">
-                <img src="${faviconUrl}" alt="${link.title}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1011/1011322.png'">
-            </div>
-            <div class="link-info">
-                <h3>${link.title}</h3>
-                <p>${domain}</p>
-            </div>
-            <div class="card-actions">
-                <span class="category-badge">${link.category}</span>
-                <button class="delete-btn" title="Delete Link">
-                    <i class="fas fa-trash-alt"></i>
-                </button>
-            </div>
+            <div class="link-icon"><img src="${faviconUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1011/1011322.png'"></div>
+            <div class="link-info"><h3>${link.title}</h3><p>${domain}</p></div>
+            <div class="card-actions"><span class="category-badge">${link.category}</span><button class="delete-btn"><i class="fas fa-trash-alt"></i></button></div>
         `;
         div.addEventListener('click', () => window.open(link.url, '_blank', 'noopener,noreferrer'));
-        const delBtn = div.querySelector('.delete-btn');
-        delBtn.addEventListener('click', (e) => deleteLink(link.id, e));
+        div.querySelector('.delete-btn').addEventListener('click', (e) => deleteLink(link.id, e));
         return div;
     }
 });
