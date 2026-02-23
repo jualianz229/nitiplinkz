@@ -419,7 +419,9 @@ body {
     letter-spacing: 0.5px;
 }
 
-.delete-btn {
+.delete-btn,
+.edit-btn,
+.copy-btn {
     background: transparent;
     border: none;
     color: var(--text-muted);
@@ -427,11 +429,54 @@ body {
     padding: 0.5rem;
     border-radius: 8px;
     transition: all 0.2s;
+    font-size: 1rem;
 }
 
 .delete-btn:hover {
     color: var(--danger);
     background: rgba(239, 68, 68, 0.1);
+}
+
+.edit-btn:hover {
+    color: var(--primary);
+    background: rgba(37, 99, 235, 0.1);
+}
+
+.copy-btn:hover {
+    color: var(--success);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.action-buttons {
+    display: flex;
+    gap: 0.25rem;
+}
+
+/* Toast Notification */
+.toast {
+    position: fixed;
+    top: 2rem;
+    right: 2rem;
+    background: white;
+    padding: 1rem 1.5rem;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    z-index: 2000;
+    transform: translateX(150%);
+    transition: transform 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    border-left: 4px solid var(--success);
+}
+
+.toast.active {
+    transform: translateX(0);
+}
+
+.toast i {
+    color: var(--success);
+    font-size: 1.2rem;
 }
 
 /* Empty State */

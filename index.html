@@ -21,6 +21,12 @@
         <div class="blob blob-3"></div>
     </div>
 
+    <!-- Notification Toast -->
+    <div id="toast" class="toast">
+        <i class="fas fa-check-circle"></i>
+        <span id="toastMessage">Link copied to clipboard!</span>
+    </div>
+
     <nav class="navbar">
         <div class="container">
             <div class="logo">
@@ -63,14 +69,15 @@
         </div>
     </main>
 
-    <!-- Modal for Adding Link -->
+    <!-- Modal for Adding/Editing Link -->
     <div id="linkModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>Add Favorite Link</h2>
+                <h2 id="modalTitle">Add Favorite Link</h2>
                 <button class="close-btn" id="closeModalBtn">&times;</button>
             </div>
             <form id="linkForm">
+                <input type="hidden" id="linkId">
                 <div class="form-group">
                     <label for="linkTitle">Title</label>
                     <input type="text" id="linkTitle" placeholder="e.g. My Portfolio" required>
@@ -83,7 +90,7 @@
                     <label for="linkCategory">Category (Optional)</label>
                     <input type="text" id="linkCategory" placeholder="e.g. Work, Social, Dev">
                 </div>
-                <button type="submit" class="btn btn-submit">Save Link</button>
+                <button type="submit" id="submitBtn" class="btn btn-submit">Save Link</button>
             </form>
         </div>
     </div>
