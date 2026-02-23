@@ -251,7 +251,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         div.innerHTML = `
             <div class="card-select"></div>
-            <div class="avatar">${firstLetter}</div>
             <div class="link-info">
                 <h3>${link.title}</h3>
                 <p>${domain}</p>
