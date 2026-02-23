@@ -145,12 +145,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!categoriesContainer) return;
         const categories = ['Semua', ...new Set(links.map(link => link.category))];
         categoriesContainer.innerHTML = '';
-        const colors = ['cat-blue', 'cat-green', 'cat-orange', 'cat-purple', 'cat-rose', 'cat-cyan'];
 
-        categories.forEach((cat, i) => {
+        categories.forEach((cat) => {
             const pill = document.createElement('div');
             pill.className = `category-pill ${cat === activeCategory ? 'active' : ''}`;
-            if (cat !== 'Semua') pill.classList.add(colors[i % colors.length]);
             pill.textContent = cat;
             pill.addEventListener('click', () => {
                 activeCategory = cat;
@@ -180,10 +178,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         div.className = 'link-card';
         let domain = 'link';
         try { domain = new URL(link.url).hostname; } catch (e) { domain = link.url; }
-        const faviconUrl = `https://www.google.com/s2/favicons?sz=128&domain=${domain}`;
 
         div.innerHTML = `
-            <div class="link-icon"><img src="${faviconUrl}" onerror="this.src='https://cdn-icons-png.flaticon.com/512/1011/1011322.png'"></div>
             <div class="link-info"><h3>${link.title}</h3><p>${domain}</p></div>
             <div class="card-actions">
                 <span class="category-badge">${link.category}</span>
