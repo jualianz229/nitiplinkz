@@ -54,6 +54,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const duplicateWarning = document.getElementById('duplicateWarning');
     const linkUrlInput = document.getElementById('linkUrl');
     const categoryList = document.getElementById('categoryList');
+    const installBanner = document.getElementById('installBanner');
+    const installBtn = document.getElementById('installBtn');
+    const dismissInstall = document.getElementById('dismissInstall');
 
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
@@ -61,6 +64,42 @@ document.addEventListener('DOMContentLoaded', async () => {
             navigator.serviceWorker.register('/sw.js').catch(err => console.log('SW registration failed:', err));
         });
     }
+
+    // --- PWA Install Prompt ---
+    let deferredPrompt = null;
+
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show banner after 3s if user hasn't dismissed before
+        if (!sessionStorage.getItem('installDismissed')) {
+            setTimeout(() => {
+                installBanner.style.display = 'flex';
+            }, 3000);
+        }
+    });
+
+    installBtn.addEventListener('click', async () => {
+        installBanner.style.display = 'none';
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') showToast('✅ LinkVault installed!');
+        deferredPrompt = null;
+    });
+
+    dismissInstall.addEventListener('click', () => {
+        installBanner.style.display = 'none';
+        sessionStorage.setItem('installDismissed', '1');
+    });
+
+    // Handle ?action=add shortcut from manifest
+    if (new URLSearchParams(window.location.search).get('action') === 'add') {
+        window.addEventListener('appReady', () => {
+            if (checkAuth()) { resetModal(); linkModal.classList.add('active'); }
+        }, { once: true });
+    }
+
 
     // --- UI Listeners ---
     openModalBtn.addEventListener('click', () => {

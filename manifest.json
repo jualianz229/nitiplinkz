@@ -1,17 +1,49 @@
 {
     "name": "LinkVault",
     "short_name": "LinkVault",
-    "description": "Premium Link Management",
+    "description": "Manage your shopping links with ease",
     "start_url": "/",
     "display": "standalone",
-    "background_color": "#f8fafc",
+    "orientation": "portrait",
+    "background_color": "#2563eb",
     "theme_color": "#2563eb",
     "icons": [
         {
-            "src": "https://cdn-icons-png.flaticon.com/512/1011/1011322.png",
+            "src": "/icon.svg",
+            "sizes": "192x192",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon.svg",
             "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
+            "type": "image/svg+xml",
+            "purpose": "any"
+        },
+        {
+            "src": "/icon.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "maskable"
         }
+    ],
+    "shortcuts": [
+        {
+            "name": "Add Product",
+            "short_name": "Add",
+            "description": "Add a new product link",
+            "url": "/?action=add",
+            "icons": [
+                {
+                    "src": "/icon.svg",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "categories": [
+        "shopping",
+        "productivity",
+        "utilities"
     ]
 }
