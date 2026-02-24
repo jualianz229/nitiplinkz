@@ -90,7 +90,21 @@
 
     <main class="container">
         <header class="main-header">
-            <h1>My Digital Library</h1>
+            <div class="main-header-top">
+                <h1>My Digital Library</h1>
+                <div class="data-actions">
+                    <button id="exportCsvBtn" class="data-btn" title="Export as CSV">
+                        <i class="fas fa-file-csv"></i><span>CSV</span>
+                    </button>
+                    <button id="exportJsonBtn" class="data-btn" title="Export as JSON">
+                        <i class="fas fa-file-code"></i><span>JSON</span>
+                    </button>
+                    <label class="data-btn import-label" title="Import from CSV">
+                        <i class="fas fa-file-import"></i><span>Import</span>
+                        <input type="file" id="importCsvInput" accept=".csv" style="display:none;">
+                    </label>
+                </div>
+            </div>
             <p id="statsText">Storing 0 valuable connections</p>
         </header>
 
@@ -125,7 +139,8 @@
                 <input type="hidden" id="linkId">
                 <div class="form-group">
                     <label for="linkTitle">Product Name</label>
-                    <input type="text" id="linkTitle" placeholder="e.g. BImoli 2L" required>
+                    <input type="text" id="linkTitle" placeholder="e.g. BIMOLI 2L, GULA 1KG" required
+                        autocapitalize="words">
                 </div>
                 <div class="form-group">
                     <label for="linkUrl">Product URL</label>
@@ -137,8 +152,8 @@
                 </div>
                 <div class="form-group">
                     <label for="linkCategory">Store Name</label>
-                    <input type="text" id="linkCategory" placeholder="e.g. Indomaret, Hypermart, Shopee"
-                        autocomplete="off" list="categoryList">
+                    <input type="text" id="linkCategory" placeholder="e.g. INDOMARET, HYPERMART, SHOPEE"
+                        autocomplete="off" autocapitalize="words" list="categoryList">
                     <datalist id="categoryList"></datalist>
                 </div>
                 <button type="submit" id="submitBtn" class="btn btn-submit">Save Link</button>

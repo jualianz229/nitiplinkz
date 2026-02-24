@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const installBanner = document.getElementById('installBanner');
     const installBtn = document.getElementById('installBtn');
     const dismissInstall = document.getElementById('dismissInstall');
+    const exportCsvBtn = document.getElementById('exportCsvBtn');
+    const exportJsonBtn = document.getElementById('exportJsonBtn');
+    const importCsvInput = document.getElementById('importCsvInput');
 
     // Register PWA Service Worker
     if ('serviceWorker' in navigator) {
@@ -157,6 +160,26 @@ document.addEventListener('DOMContentLoaded', async () => {
             .join('');
     }
 
+    // 3. Auto-capitalize: first letter of each word (for desktop)
+    function toTitleCase(str) {
+        return str.replace(/\b\w/g, (char) => char.toUpperCase());
+    }
+
+    function applyAutoCapitalize(input) {
+        input.addEventListener('input', () => {
+            const { value, selectionStart } = input;
+            const capitalized = toTitleCase(value);
+            if (capitalized !== value) {
+                input.value = capitalized;
+                // Restore cursor position
+                input.setSelectionRange(selectionStart, selectionStart);
+            }
+        });
+    }
+
+    applyAutoCapitalize(document.getElementById('linkTitle'));
+    applyAutoCapitalize(document.getElementById('linkCategory'));
+
     viewToggle.addEventListener('click', () => {
         viewMode = viewMode === 'grid-mode' ? 'list-mode' : 'grid-mode';
         localStorage.setItem('viewMode', viewMode);
@@ -186,6 +209,83 @@ document.addEventListener('DOMContentLoaded', async () => {
                 renderLinks();
             }
         }
+    });
+
+    // --- Data Management ---
+
+    // Export as CSV
+    exportCsvBtn.addEventListener('click', () => {
+        if (links.length === 0) { showToast('No data to export!'); return; }
+        const headers = ['title', 'url', 'category'];
+        const rows = links.map(l =>
+            headers.map(h => `"${(l[h] || '').replace(/"/g, '""')}"`).join(',')
+        );
+        const csv = [headers.join(','), ...rows].join('\n');
+        downloadFile(csv, 'linkvault-export.csv', 'text/csv');
+        showToast('✅ Exported as CSV!');
+    });
+
+    // Export as JSON
+    exportJsonBtn.addEventListener('click', () => {
+        if (links.length === 0) { showToast('No data to export!'); return; }
+        const data = links.map(({ id, title, url, category }) => ({ id, title, url, category }));
+        downloadFile(JSON.stringify(data, null, 2), 'linkvault-export.json', 'application/json');
+        showToast('✅ Exported as JSON!');
+    });
+
+    function downloadFile(content, filename, mimeType) {
+        const blob = new Blob([content], { type: mimeType });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = filename;
+        a.click();
+        URL.revokeObjectURL(url);
+    }
+
+    // Import from CSV
+    importCsvInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        if (!checkAuth()) { importCsvInput.value = ''; return; }
+
+        const text = await file.text();
+        const lines = text.trim().split('\n');
+        if (lines.length < 2) { showToast('CSV file is empty or invalid.'); return; }
+
+        // Parse headers (case-insensitive, strip quotes)
+        const headers = lines[0].split(',').map(h => h.replace(/"/g, '').trim().toLowerCase());
+        const titleIdx = headers.indexOf('title');
+        const urlIdx = headers.indexOf('url');
+        const catIdx = headers.indexOf('category');
+
+        if (titleIdx === -1 || urlIdx === -1) {
+            showToast('❌ CSV must have "title" and "url" columns.');
+            importCsvInput.value = '';
+            return;
+        }
+
+        const toInsert = [];
+        for (let i = 1; i < lines.length; i++) {
+            const cols = lines[i].split(',').map(c => c.replace(/"/g, '').trim());
+            const title = cols[titleIdx];
+            const url = cols[urlIdx];
+            const category = catIdx !== -1 ? (cols[catIdx] || 'Uncategorized') : 'Uncategorized';
+            if (title && url) toInsert.push({ title, url, category });
+        }
+
+        if (toInsert.length === 0) { showToast('No valid rows found in CSV.'); return; }
+
+        showToast(`⏳ Importing ${toInsert.length} products...`);
+        const { data: inserted, error } = await supabase.from('links').insert(toInsert).select();
+        if (!error && inserted) {
+            links = [...links, ...inserted];
+            renderLinks();
+            showToast(`✅ ${inserted.length} products imported!`);
+        } else {
+            showToast('❌ Import failed. Check your data.');
+        }
+        importCsvInput.value = '';
     });
 
     if (categoriesContainer) {
@@ -296,6 +396,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         setTimeout(updateArrowVisibility, 100);
     }
 
+    function updateStats() {
+        const total = links.length;
+        const stores = new Set(links.map(l => l.category).filter(Boolean)).size;
+        statsText.textContent = total === 0
+            ? 'No products yet. Add your first!'
+            : `${total} product${total > 1 ? 's' : ''} · ${stores} store${stores > 1 ? 's' : ''}`;
+    }
+
     function renderLinks(data = null, updateCategories = true, searchTerm = '') {
         const renderData = data || (activeCategory === 'Semua' ? links : links.filter(l => l.category === activeCategory));
 
@@ -314,7 +422,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             renderCategories();
             updateCategoryDatalist();
         }
-        statsText.textContent = `Storing ${renderData.length} valuable connections`;
+        updateStats();
     }
 
     // 3. Search highlight helper

@@ -231,14 +231,62 @@ body {
 
 /* Main Header */
 .main-header {
-    padding: 4rem 0 2rem;
-    text-align: center;
+    padding: 3rem 0 1.5rem;
+}
+
+.main-header-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
 }
 
 .main-header h1 {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
+    font-size: 2.75rem;
     letter-spacing: -1px;
+}
+
+/* Data Management Buttons */
+.data-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.data-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.45rem 0.85rem;
+    background: white;
+    border: 1.5px solid var(--glass-border);
+    border-radius: 10px;
+    font-size: 0.78rem;
+    font-weight: 600;
+    font-family: 'Outfit', sans-serif;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.data-btn:hover {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: #eff6ff;
+}
+
+.import-label {
+    cursor: pointer;
+}
+
+.import-label:hover {
+    border-color: var(--success);
+    color: var(--success);
+    background: #f0fdf4;
 }
 
 /* Categories Slider */
